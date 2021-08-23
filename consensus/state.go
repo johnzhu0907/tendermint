@@ -2262,6 +2262,16 @@ func (cs *State) signVote(
 
 	v := vote.ToProto()
 	err := cs.privValidator.SignVote(cs.state.ChainID, v)
+
+	switch msgType {
+	case tmproto.PrecommitType:
+		// if the signedMessage type is for a precommit, add VoteExtension
+		ext, err := cs.blockExec.ExtendVote(vote)
+		if err != nil {
+			return nil, err
+		}
+		vote.VoteExtension = ext
+	}
 	vote.Signature = v.Signature
 	vote.Timestamp = v.Timestamp
 
@@ -2290,7 +2300,11 @@ func (cs *State) voteTime() time.Time {
 }
 
 // sign the vote and publish on internalMsgQueue
-func (cs *State) signAddVote(msgType tmproto.SignedMsgType, hash []byte, header types.PartSetHeader) *types.Vote {
+func (cs *State) signAddVote(
+	msgType tmproto.SignedMsgType,
+	hash []byte,
+	header types.PartSetHeader,
+) *types.Vote {
 	if cs.privValidator == nil { // the node does not have a key
 		return nil
 	}

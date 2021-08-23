@@ -283,6 +283,14 @@ func (cli *socketClient) ProcessProposalAsync(req types.RequestProcessProposal) 
 	return cli.queueRequest(types.ToRequestProcessProposal(req))
 }
 
+func (cli *socketClient) ExtendVoteAsync(req types.RequestExtendVote) *ReqRes {
+	return cli.queueRequest(types.ToRequestExtendVote(req))
+}
+
+func (cli *socketClient) VerifyVoteExtensionAsync(req types.RequestVerifyVoteExtension) *ReqRes {
+	return cli.queueRequest(types.ToRequestVerifyVoteExtension(req))
+}
+
 //----------------------------------------
 
 func (cli *socketClient) FlushSync() error {
@@ -393,8 +401,7 @@ func (cli *socketClient) OfferSnapshotSync(req types.RequestOfferSnapshot) (*typ
 	return reqres.Response.GetOfferSnapshot(), cli.Error()
 }
 
-func (cli *socketClient) LoadSnapshotChunkSync(
-	req types.RequestLoadSnapshotChunk) (*types.ResponseLoadSnapshotChunk, error) {
+func (cli *socketClient) LoadSnapshotChunkSync(req types.RequestLoadSnapshotChunk) (*types.ResponseLoadSnapshotChunk, error) {
 	reqres := cli.queueRequest(types.ToRequestLoadSnapshotChunk(req))
 	if err := cli.FlushSync(); err != nil {
 		return nil, err
@@ -403,13 +410,28 @@ func (cli *socketClient) LoadSnapshotChunkSync(
 	return reqres.Response.GetLoadSnapshotChunk(), cli.Error()
 }
 
-func (cli *socketClient) ApplySnapshotChunkSync(
-	req types.RequestApplySnapshotChunk) (*types.ResponseApplySnapshotChunk, error) {
+func (cli *socketClient) ApplySnapshotChunkSync(req types.RequestApplySnapshotChunk) (*types.ResponseApplySnapshotChunk, error) {
 	reqres := cli.queueRequest(types.ToRequestApplySnapshotChunk(req))
 	if err := cli.FlushSync(); err != nil {
 		return nil, err
 	}
 	return reqres.Response.GetApplySnapshotChunk(), cli.Error()
+}
+
+func (cli *socketClient) ExtendVoteSync(req types.RequestExtendVote) (*types.ResponseExtendVote, error) {
+	reqres := cli.queueRequest(types.ToRequestExtendVote(req))
+	if err := cli.FlushSync(); err != nil {
+		return nil, err
+	}
+	return reqres.Response.GetExtendVote(), cli.Error()
+}
+
+func (cli *socketClient) VerifyVoteExtensionSync(req types.RequestVerifyVoteExtension) (*types.ResponseVerifyVoteExtension, error) {
+	reqres := cli.queueRequest(types.ToRequestVerifyVoteExtension(req))
+	if err := cli.FlushSync(); err != nil {
+		return nil, err
+	}
+	return reqres.Response.GetVerifyVoteExtension(), cli.Error()
 }
 
 func (cli *socketClient) PrepareProposalSync(req types.RequestPrepareProposal) (*types.ResponsePrepareProposal, error) {
@@ -503,6 +525,10 @@ func resMatchesReq(req *types.Request, res *types.Response) (ok bool) {
 		_, ok = res.Value.(*types.Response_ListSnapshots)
 	case *types.Request_OfferSnapshot:
 		_, ok = res.Value.(*types.Response_OfferSnapshot)
+	case *types.Request_ExtendVote:
+		_, ok = res.Value.(*types.Response_ExtendVote)
+	case *types.Request_VerifyVoteExtension:
+		_, ok = res.Value.(*types.Response_VerifyVoteExtension)
 	case *types.Request_PrepareProposal:
 		_, ok = res.Value.(*types.Response_PrepareProposal)
 	case *types.Request_ProcessProposal:

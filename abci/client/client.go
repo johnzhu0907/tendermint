@@ -43,6 +43,8 @@ type Client interface {
 	LoadSnapshotChunkAsync(types.RequestLoadSnapshotChunk) *ReqRes
 	ApplySnapshotChunkAsync(types.RequestApplySnapshotChunk) *ReqRes
 	ProcessProposalAsync(types.RequestProcessProposal) *ReqRes
+	ExtendVoteAsync(types.RequestExtendVote) *ReqRes
+	VerifyVoteExtensionAsync(types.RequestVerifyVoteExtension) *ReqRes
 
 	FlushSync() error
 	EchoSync(msg string) (*types.ResponseEcho, error)
@@ -60,6 +62,8 @@ type Client interface {
 	LoadSnapshotChunkSync(types.RequestLoadSnapshotChunk) (*types.ResponseLoadSnapshotChunk, error)
 	ApplySnapshotChunkSync(types.RequestApplySnapshotChunk) (*types.ResponseApplySnapshotChunk, error)
 	ProcessProposalSync(types.RequestProcessProposal) (*types.ResponseProcessProposal, error)
+	ExtendVoteSync(types.RequestExtendVote) (*types.ResponseExtendVote, error)
+	VerifyVoteExtensionSync(types.RequestVerifyVoteExtension) (*types.ResponseVerifyVoteExtension, error)
 }
 
 //----------------------------------------

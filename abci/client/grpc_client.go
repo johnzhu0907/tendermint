@@ -299,6 +299,23 @@ func (cli *grpcClient) PrepareProposalAsync(params types.RequestPrepareProposal)
 	}
 	return cli.finishAsyncCall(req, &types.Response{Value: &types.Response_PrepareProposal{PrepareProposal: res}})
 }
+func (cli *grpcClient) ExtendVoteAsync(params types.RequestExtendVote) *ReqRes {
+	req := types.ToRequestExtendVote(params)
+	res, err := cli.client.ExtendVote(context.Background(), req.GetExtendVote(), grpc.WaitForReady(true))
+	if err != nil {
+		cli.StopForError(err)
+	}
+	return cli.finishAsyncCall(req, &types.Response{Value: &types.Response_ExtendVote{ExtendVote: res}})
+}
+
+func (cli *grpcClient) VerifyVoteExtensionAsync(params types.RequestVerifyVoteExtension) *ReqRes {
+	req := types.ToRequestVerifyVoteExtension(params)
+	res, err := cli.client.VerifyVoteExtension(context.Background(), req.GetVerifyVoteExtension(), grpc.WaitForReady(true))
+	if err != nil {
+		cli.StopForError(err)
+	}
+	return cli.finishAsyncCall(req, &types.Response{Value: &types.Response_VerifyVoteExtension{VerifyVoteExtension: res}})
+}
 
 func (cli *grpcClient) ProcessProposalAsync(params types.RequestProcessProposal) *ReqRes {
 	req := types.ToRequestProcessProposal(params)
@@ -421,6 +438,18 @@ func (cli *grpcClient) ApplySnapshotChunkSync(
 	params types.RequestApplySnapshotChunk) (*types.ResponseApplySnapshotChunk, error) {
 	reqres := cli.ApplySnapshotChunkAsync(params)
 	return cli.finishSyncCall(reqres).GetApplySnapshotChunk(), cli.Error()
+}
+
+func (cli *grpcClient) ExtendVoteSync(
+	params types.RequestExtendVote) (*types.ResponseExtendVote, error) {
+	reqres := cli.ExtendVoteAsync(params)
+	return cli.finishSyncCall(reqres).GetExtendVote(), cli.Error()
+}
+
+func (cli *grpcClient) VerifyVoteExtensionSync(
+	params types.RequestVerifyVoteExtension) (*types.ResponseVerifyVoteExtension, error) {
+	reqres := cli.VerifyVoteExtensionAsync(params)
+	return cli.finishSyncCall(reqres).GetVerifyVoteExtension(), cli.Error()
 }
 
 func (cli *grpcClient) PrepareProposalSync(
