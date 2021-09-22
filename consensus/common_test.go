@@ -106,6 +106,7 @@ func (vs *validatorStub) signVote(
 		Timestamp:        tmtime.Now(),
 		Type:             voteType,
 		BlockID:          types.BlockID{Hash: hash, PartSetHeader: header},
+		VoteExtension:    types.VoteExtensionFromProto(kvstore.ConstructVoteExtension(pubKey.Address())),
 	}
 	v := vote.ToProto()
 	if err := vs.PrivValidator.SignVote(config.ChainID(), v); err != nil {
@@ -130,6 +131,10 @@ func signVote(vs *validatorStub, voteType tmproto.SignedMsgType, hash []byte, he
 	if err != nil {
 		panic(fmt.Errorf("failed to sign vote: %v", err))
 	}
+
+	// TODO: remove hardcoded vote extension.
+	// currently set for abci/examples/kvstore/persistent_kvstore.go
+	v.VoteExtension = types.VoteExtensionFromProto(kvstore.ConstructVoteExtension(v.ValidatorAddress))
 
 	vs.lastVote = v
 

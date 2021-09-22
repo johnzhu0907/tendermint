@@ -323,7 +323,6 @@ func (cli *grpcClient) ProcessProposalAsync(params types.RequestProcessProposal)
 	if err != nil {
 		cli.StopForError(err)
 	}
-
 	return cli.finishAsyncCall(req, &types.Response{Value: &types.Response_ProcessProposal{ProcessProposal: res}})
 }
 
