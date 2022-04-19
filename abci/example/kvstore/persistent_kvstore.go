@@ -14,7 +14,6 @@ import (
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	"github.com/tendermint/tendermint/libs/log"
 	pc "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	ptypes "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const (
@@ -174,19 +173,6 @@ func (app *PersistentKVStoreApplication) ApplySnapshotChunk(
 	return types.ResponseApplySnapshotChunk{Result: types.ResponseApplySnapshotChunk_ABORT}
 }
 
-func (app *PersistentKVStoreApplication) ExtendVote(
-	req types.RequestExtendVote) types.ResponseExtendVote {
-	return types.ResponseExtendVote{
-		VoteExtension: ConstructVoteExtension(req.Vote.ValidatorAddress),
-	}
-}
-
-func (app *PersistentKVStoreApplication) VerifyVoteExtension(
-	req types.RequestVerifyVoteExtension) types.ResponseVerifyVoteExtension {
-	return types.RespondVerifyVoteExtension(
-		app.verifyExtension(req.Vote.ValidatorAddress, req.Vote.VoteExtension))
-}
-
 func (app *PersistentKVStoreApplication) PrepareProposal(
 	req types.RequestPrepareProposal) types.ResponsePrepareProposal {
 	return types.ResponsePrepareProposal{Txs: app.substPrepareTx(req.Txs, req.MaxTxBytes)}
@@ -200,6 +186,14 @@ func (app *PersistentKVStoreApplication) ProcessProposal(
 		}
 	}
 	return types.ResponseProcessProposal{Status: types.ResponseProcessProposal_ACCEPT}
+}
+
+func (app *PersistentKVStoreApplication) ExtendVote(req types.RequestExtendVote) types.ResponseExtendVote {
+	return app.app.ExtendVote(req)
+}
+
+func (app *PersistentKVStoreApplication) VerifyVoteExtension(req types.RequestVerifyVoteExtension) types.ResponseVerifyVoteExtension {
+	return app.app.VerifyVoteExtension(req)
 }
 
 //---------------------------------------------
@@ -354,25 +348,4 @@ func (app *PersistentKVStoreApplication) substPrepareTx(blockData [][]byte, maxT
 		txs = append(txs, txMod)
 	}
 	return txs
-}
-
-func ConstructVoteExtension(valAddr []byte) *ptypes.VoteExtension {
-	return &ptypes.VoteExtension{
-		AppDataToSign:             valAddr,
-		AppDataSelfAuthenticating: valAddr,
-	}
-}
-
-func (app *PersistentKVStoreApplication) verifyExtension(valAddr []byte, ext *ptypes.VoteExtension) bool {
-	if ext == nil {
-		return false
-	}
-	canonical := ConstructVoteExtension(valAddr)
-	if !bytes.Equal(canonical.AppDataToSign, ext.AppDataToSign) {
-		return false
-	}
-	if !bytes.Equal(canonical.AppDataSelfAuthenticating, ext.AppDataSelfAuthenticating) {
-		return false
-	}
-	return true
 }
