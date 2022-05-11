@@ -52,7 +52,7 @@ type Reactor struct {
 	initialState sm.State
 
 	blockExec *sm.BlockExecutor
-	store     *store.BlockStore
+	store     sm.BlockStore
 	pool      *BlockPool
 	blockSync bool
 
@@ -176,13 +176,21 @@ func (bcR *Reactor) respondToPeer(msg *bcproto.BlockRequest,
 
 	block := bcR.store.LoadBlock(msg.Height)
 	if block != nil {
+		extCommit := bcR.store.LoadBlockExtendedCommit(msg.Height)
+		if extCommit == nil {
+			bcR.Logger.Error("found block in store without extended commit", "block", block)
+			return false
+		}
 		bl, err := block.ToProto()
 		if err != nil {
 			bcR.Logger.Error("could not convert msg to protobuf", "err", err)
 			return false
 		}
 
-		msgBytes, err := EncodeMsg(&bcproto.BlockResponse{Block: bl})
+		msgBytes, err := EncodeMsg(&bcproto.BlockResponse{
+			Block:     bl,
+			ExtCommit: extCommit.ToProto()},
+		)
 		if err != nil {
 			bcR.Logger.Error("could not marshal msg", "err", err)
 			return false
@@ -228,7 +236,17 @@ func (bcR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 			bcR.Logger.Error("Block content is invalid", "err", err)
 			return
 		}
-		bcR.pool.AddBlock(src.ID(), bi, len(msgBytes))
+		extCommit, err := types.ExtendedCommitFromProto(msg.ExtCommit)
+		if err != nil {
+			bcR.Logger.Error("failed to convert extended commit from proto",
+				"peer", src,
+				"err", err)
+			return
+		}
+
+		if err := bcR.pool.AddBlock(src.ID(), bi, extCommit, len(msgBytes)); err != nil {
+			bcR.Logger.Error("failed to add block", "err", err)
+		}
 	case *bcproto.StatusRequest:
 		// Send peer our state.
 		msgBytes, err := EncodeMsg(&bcproto.StatusResponse{
@@ -317,6 +335,19 @@ FOR_LOOP:
 			outbound, inbound, _ := bcR.Switch.NumPeers()
 			bcR.Logger.Debug("Consensus ticker", "numPending", numPending, "total", lenRequesters,
 				"outbound", outbound, "inbound", inbound)
+
+			// TODO(sergio) Might be needed for implementing the upgrading solution. Remove after that
+			if state.LastBlockHeight > 0 && blocksSynced == 0 {
+				// Having state-synced, we need to blocksync at least one block
+				bcR.Logger.Info(
+					"no seen commit yet",
+					"height", height,
+					"last_block_height", state.LastBlockHeight,
+					"initial_height", state.InitialHeight,
+					"max_peer_height", bcR.pool.MaxPeerHeight(),
+				)
+				continue FOR_LOOP
+			}
 			if bcR.pool.IsCaughtUp() {
 				bcR.Logger.Info("Time to switch to consensus reactor!", "height", height)
 				if err := bcR.pool.Stop(); err != nil {
@@ -349,10 +380,14 @@ FOR_LOOP:
 			// routine.
 
 			// See if there are any blocks to sync.
-			first, second := bcR.pool.PeekTwoBlocks()
+			first, second, extCommit := bcR.pool.PeekTwoBlocks()
 			// bcR.Logger.Info("TrySync peeked", "first", first, "second", second)
-			if first == nil || second == nil {
-				// We need both to sync the first block.
+			if first == nil || second == nil || extCommit == nil {
+				if first != nil && extCommit == nil {
+					// See https://github.com/tendermint/tendermint/pull/8433#discussion_r866790631
+					panic(fmt.Errorf("peeked first block without extended commit at height %d - possible node store corruption", first.Height))
+				}
+				// we need all to sync the first block
 				continue FOR_LOOP
 			} else {
 				// Try again quickly next loop.
@@ -372,6 +407,7 @@ FOR_LOOP:
 			// NOTE: we can probably make this more efficient, but note that calling
 			// first.Hash() doesn't verify the tx contents, so MakePartSet() is
 			// currently necessary.
+			// TODO(sergio): Should we also validate against the extended commit?
 			err = state.Validators.VerifyCommitLight(
 				chainID, firstID, first.Height, second.LastCommit)
 
@@ -402,7 +438,7 @@ FOR_LOOP:
 			bcR.pool.PopRequest()
 
 			// TODO: batch saves so we dont persist to disk every block
-			bcR.store.SaveBlock(first, firstParts, second.LastCommit)
+			bcR.store.SaveBlock(first, firstParts, extCommit)
 
 			// TODO: same thing for app - but we would need a way to
 			// get the hash without persisting the state
