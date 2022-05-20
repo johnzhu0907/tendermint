@@ -106,7 +106,7 @@ func TestValidateBlockHeader(t *testing.T) {
 		state, _, lastExtCommit, err = makeAndCommitGoodBlock(
 			state, height, lastCommit, state.Validators.GetProposer().Address, blockExec, privVals, nil)
 		require.NoError(t, err, "height %d", height)
-		lastCommit = lastExtCommit.StripExtensions()
+		lastCommit = lastExtCommit.ToCommit()
 	}
 }
 
@@ -201,7 +201,7 @@ func TestValidateBlockCommit(t *testing.T) {
 			nil,
 		)
 		require.NoError(t, err, "height %d", height)
-		lastCommit = lastExtCommit.StripExtensions()
+		lastCommit = lastExtCommit.ToCommit()
 
 		/*
 			wrongSigsCommit is fine except for the extra bad precommit
@@ -340,7 +340,7 @@ func TestValidateBlockEvidence(t *testing.T) {
 			evidence,
 		)
 		require.NoError(t, err, "height %d", height)
-		lastCommit = lastExtCommit.StripExtensions()
+		lastCommit = lastExtCommit.ToCommit()
 
 	}
 }

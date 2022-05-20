@@ -258,7 +258,7 @@ func (pool *BlockPool) AddBlock(peerID p2p.ID, block *types.Block, extCommit *ty
 	pool.mtx.Lock()
 	defer pool.mtx.Unlock()
 
-	if block.Height != extCommit.Height {
+	if extCommit != nil && block.Height != extCommit.Height {
 		return fmt.Errorf("heights don't match, not adding block (block height: %d, commit height: %d)", block.Height, extCommit.Height)
 	}
 
@@ -565,7 +565,9 @@ func (bpr *bpRequester) setBlock(block *types.Block, extCommit *types.ExtendedCo
 		return false
 	}
 	bpr.block = block
-	bpr.extCommit = extCommit
+	if extCommit != nil {
+		bpr.extCommit = extCommit
+	}
 	bpr.mtx.Unlock()
 
 	select {

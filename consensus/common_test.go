@@ -524,7 +524,7 @@ func makeState(ctx context.Context, t *testing.T, args makeStateArgs) (*State, [
 	if args.logger == nil {
 		args.logger = log.NewNopLogger()
 	}
-	c := types.DefaultConsensusParams()
+	c := test.ConsensusParams()
 	if args.consensusParams != nil {
 		c = args.consensusParams
 	}
