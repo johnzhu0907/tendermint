@@ -579,7 +579,7 @@ func updateState(
 	if len(validatorUpdates) > 0 {
 		err := nValSet.UpdateWithChangeSet(validatorUpdates)
 		if err != nil {
-			return state, fmt.Errorf("error changing validator set: %v", err)
+			return state, fmt.Errorf("changing validator set: %w", err)
 		}
 		// Change results from this height but only applies to the next next height.
 		lastHeightValsChanged = header.Height + 1 + 1
@@ -596,7 +596,12 @@ func updateState(
 		nextParams = state.ConsensusParams.Update(abciResponses.EndBlock.ConsensusParamUpdates)
 		err := nextParams.ValidateBasic()
 		if err != nil {
-			return state, fmt.Errorf("error updating consensus params: %v", err)
+			return state, fmt.Errorf("updating consensus params: %w", err)
+		}
+
+		err = state.ConsensusParams.ValidateUpdate(&nextParams, header.Height)
+		if err != nil {
+			return state, fmt.Errorf("updating consensus params: %w", err)
 		}
 
 		state.Version.Consensus.App = nextParams.Version.App

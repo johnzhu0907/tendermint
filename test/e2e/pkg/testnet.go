@@ -69,6 +69,7 @@ type Testnet struct {
 	PrepareProposalDelay time.Duration
 	ProcessProposalDelay time.Duration
 	CheckTxDelay         time.Duration
+	VoteExtensionsEnableHeight int64
 }
 
 // Node represents a Tendermint node in a testnet.
