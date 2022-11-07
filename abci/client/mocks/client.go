@@ -303,6 +303,45 @@ func (_m *Client) Error() error {
 	return r0
 }
 
+// ExtendVoteAsync provides a mock function with given fields: _a0
+func (_m *Client) ExtendVoteAsync(_a0 types.RequestExtendVote) *abcicli.ReqRes {
+	ret := _m.Called(_a0)
+
+	var r0 *abcicli.ReqRes
+	if rf, ok := ret.Get(0).(func(types.RequestExtendVote) *abcicli.ReqRes); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*abcicli.ReqRes)
+		}
+	}
+
+	return r0
+}
+
+// ExtendVoteSync provides a mock function with given fields: _a0
+func (_m *Client) ExtendVoteSync(_a0 types.RequestExtendVote) (*types.ResponseExtendVote, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *types.ResponseExtendVote
+	if rf, ok := ret.Get(0).(func(types.RequestExtendVote) *types.ResponseExtendVote); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.ResponseExtendVote)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.RequestExtendVote) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FlushAsync provides a mock function with given fields:
 func (_m *Client) FlushAsync() *abcicli.ReqRes {
 	ret := _m.Called()
@@ -772,6 +811,45 @@ func (_m *Client) String() string {
 	}
 
 	return r0
+}
+
+// VerifyVoteExtensionAsync provides a mock function with given fields: _a0
+func (_m *Client) VerifyVoteExtensionAsync(_a0 types.RequestVerifyVoteExtension) *abcicli.ReqRes {
+	ret := _m.Called(_a0)
+
+	var r0 *abcicli.ReqRes
+	if rf, ok := ret.Get(0).(func(types.RequestVerifyVoteExtension) *abcicli.ReqRes); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*abcicli.ReqRes)
+		}
+	}
+
+	return r0
+}
+
+// VerifyVoteExtensionSync provides a mock function with given fields: _a0
+func (_m *Client) VerifyVoteExtensionSync(_a0 types.RequestVerifyVoteExtension) (*types.ResponseVerifyVoteExtension, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *types.ResponseVerifyVoteExtension
+	if rf, ok := ret.Get(0).(func(types.RequestVerifyVoteExtension) *types.ResponseVerifyVoteExtension); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.ResponseVerifyVoteExtension)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.RequestVerifyVoteExtension) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 type mockConstructorTestingTNewClient interface {

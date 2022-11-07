@@ -113,6 +113,29 @@ func (_m *AppConnConsensus) Error() error {
 	return r0
 }
 
+// ExtendVoteSync provides a mock function with given fields: _a0
+func (_m *AppConnConsensus) ExtendVoteSync(_a0 types.RequestExtendVote) (*types.ResponseExtendVote, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *types.ResponseExtendVote
+	if rf, ok := ret.Get(0).(func(types.RequestExtendVote) *types.ResponseExtendVote); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.ResponseExtendVote)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.RequestExtendVote) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // InitChainSync provides a mock function with given fields: _a0
 func (_m *AppConnConsensus) InitChainSync(_a0 types.RequestInitChain) (*types.ResponseInitChain, error) {
 	ret := _m.Called(_a0)
@@ -185,6 +208,29 @@ func (_m *AppConnConsensus) ProcessProposalSync(_a0 types.RequestProcessProposal
 // SetResponseCallback provides a mock function with given fields: _a0
 func (_m *AppConnConsensus) SetResponseCallback(_a0 abcicli.Callback) {
 	_m.Called(_a0)
+}
+
+// VerifyVoteExtensionSync provides a mock function with given fields: _a0
+func (_m *AppConnConsensus) VerifyVoteExtensionSync(_a0 types.RequestVerifyVoteExtension) (*types.ResponseVerifyVoteExtension, error) {
+	ret := _m.Called(_a0)
+
+	var r0 *types.ResponseVerifyVoteExtension
+	if rf, ok := ret.Get(0).(func(types.RequestVerifyVoteExtension) *types.ResponseVerifyVoteExtension); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.ResponseVerifyVoteExtension)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.RequestVerifyVoteExtension) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 type mockConstructorTestingTNewAppConnConsensus interface {

@@ -96,6 +96,20 @@ func (_m *Application) EndBlock(_a0 types.RequestEndBlock) types.ResponseEndBloc
 	return r0
 }
 
+// ExtendVote provides a mock function with given fields: _a0
+func (_m *Application) ExtendVote(_a0 types.RequestExtendVote) types.ResponseExtendVote {
+	ret := _m.Called(_a0)
+
+	var r0 types.ResponseExtendVote
+	if rf, ok := ret.Get(0).(func(types.RequestExtendVote) types.ResponseExtendVote); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Get(0).(types.ResponseExtendVote)
+	}
+
+	return r0
+}
+
 // Info provides a mock function with given fields: _a0
 func (_m *Application) Info(_a0 types.RequestInfo) types.ResponseInfo {
 	ret := _m.Called(_a0)
@@ -203,6 +217,20 @@ func (_m *Application) Query(_a0 types.RequestQuery) types.ResponseQuery {
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Get(0).(types.ResponseQuery)
+	}
+
+	return r0
+}
+
+// VerifyVoteExtension provides a mock function with given fields: _a0
+func (_m *Application) VerifyVoteExtension(_a0 types.RequestVerifyVoteExtension) types.ResponseVerifyVoteExtension {
+	ret := _m.Called(_a0)
+
+	var r0 types.ResponseVerifyVoteExtension
+	if rf, ok := ret.Get(0).(func(types.RequestVerifyVoteExtension) types.ResponseVerifyVoteExtension); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Get(0).(types.ResponseVerifyVoteExtension)
 	}
 
 	return r0
