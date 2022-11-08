@@ -760,7 +760,7 @@ func TestValidatorSet_VerifyCommit_CheckAllSignatures(t *testing.T) {
 	err = vals[3].SignVote("CentaurusA", v)
 	require.NoError(t, err)
 	vote.Signature = v.Signature
-	vote.ExtendedSignature = v.ExtendedSignature
+	vote.ExtensionSignature = v.ExtensionSignature
 	commit.Signatures[3] = vote.CommitSig()
 
 	err = valSet.VerifyCommit(chainID, blockID, h, commit)
@@ -786,7 +786,7 @@ func TestValidatorSet_VerifyCommitLight_ReturnsAsSoonAsMajorityOfVotingPowerSign
 	err = vals[3].SignVote("CentaurusA", v)
 	require.NoError(t, err)
 	vote.Signature = v.Signature
-	vote.ExtendedSignature = v.ExtendedSignature
+	vote.ExtensionSignature = v.ExtensionSignature
 	commit.Signatures[3] = vote.CommitSig()
 
 	err = valSet.VerifyCommitLight(chainID, blockID, h, commit)
@@ -810,7 +810,7 @@ func TestValidatorSet_VerifyCommitLightTrusting_ReturnsAsSoonAsTrustLevelOfVotin
 	err = vals[2].SignVote("CentaurusA", v)
 	require.NoError(t, err)
 	vote.Signature = v.Signature
-	vote.ExtendedSignature = v.ExtendedSignature
+	vote.ExtensionSignature = v.ExtensionSignature
 	commit.Signatures[2] = vote.CommitSig()
 
 	err = valSet.VerifyCommitLightTrusting(chainID, commit, tmmath.Fraction{Numerator: 1, Denominator: 3})

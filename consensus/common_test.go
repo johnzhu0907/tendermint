@@ -24,6 +24,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	cfg "github.com/tendermint/tendermint/config"
 	cstypes "github.com/tendermint/tendermint/consensus/types"
+	"github.com/tendermint/tendermint/internal/test"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -44,6 +45,30 @@ import (
 const (
 	testSubscriber = "test-client"
 )
+
+func configSetup(t *testing.T) *cfg.Config {
+	t.Helper()
+
+	cfg := ResetConfig("consensus_reactor_test")
+	t.Cleanup(func() { os.RemoveAll(cfg.RootDir) })
+
+	consensusReplayConfig := ResetConfig("consensus_replay_test")
+	t.Cleanup(func() { os.RemoveAll(consensusReplayConfig.RootDir) })
+
+	configStateTest := ResetConfig("consensus_state_test")
+	t.Cleanup(func() { os.RemoveAll(configStateTest.RootDir) })
+
+	configMempoolTest := ResetConfig("consensus_mempool_test")
+	t.Cleanup(func() { os.RemoveAll(configMempoolTest.RootDir) })
+
+	configByzantineTest := ResetConfig("consensus_byzantine_test")
+	t.Cleanup(func() { os.RemoveAll(configByzantineTest.RootDir) })
+
+	walDir := filepath.Dir(cfg.Consensus.WalFile())
+	ensureDir(walDir, 0700)
+
+	return cfg
+}
 
 // A cleanupFunc cleans up any config / test files created for a particular
 // test.
@@ -467,6 +492,55 @@ func loadPrivValidator(config *cfg.Config) *privval.FilePV {
 	return privValidator
 }
 
+type makeStateArgs struct {
+	config          *cfg.Config
+	consensusParams *types.ConsensusParams
+	logger          log.Logger
+	validators      int
+	application     abci.Application
+}
+
+func makeState(ctx context.Context, t *testing.T, args makeStateArgs) (*State, []*validatorStub) {
+	t.Helper()
+	// Get State
+	validators := 4
+	if args.validators != 0 {
+		validators = args.validators
+	}
+	var app abci.Application
+	app = kvstore.NewApplication()
+	if args.application != nil {
+		app = args.application
+	}
+	if args.config == nil {
+		args.config = configSetup(t)
+	}
+	if args.logger == nil {
+		args.logger = log.NewNopLogger()
+	}
+	c := types.DefaultConsensusParams()
+	if args.consensusParams != nil {
+		c = args.consensusParams
+	}
+
+	state, privVals := makeGenesisState(ctx, t, args.config, genesisStateArgs{
+		Params:     c,
+		Validators: validators,
+	})
+
+	vss := make([]*validatorStub, validators)
+
+	cs := newState(state, privVals[0], app)
+
+	for i := 0; i < validators; i++ {
+		vss[i] = newValidatorStub(privVals[i], int32(i))
+	}
+	// since cs1 starts at 1
+	incrementHeight(vss[1:]...)
+
+	return cs, vss
+}
+
 func randState(nValidators int) (*State, []*validatorStub) {
 	return randStateWithApp(nValidators, kvstore.NewApplication())
 }
@@ -697,6 +771,11 @@ func ensurePrevoteMatch(t *testing.T, voteCh <-chan tmpubsub.Message, height int
 	ensureVoteMatch(t, voteCh, height, round, hash, tmproto.PrevoteType)
 }
 
+func ensurePrecommitMatch(t *testing.T, voteCh <-chan tmpubsub.Message, height int64, round int32, hash []byte) {
+	t.Helper()
+	ensureVoteMatch(t, voteCh, height, round, hash, tmproto.PrecommitType)
+}
+
 func ensureVoteMatch(t *testing.T, voteCh <-chan tmpubsub.Message, height int64, round int32, hash []byte, voteType tmproto.SignedMsgType) {
 	t.Helper()
 	select {
@@ -843,6 +922,34 @@ func randConsensusNetWithPeers(
 			os.RemoveAll(dir)
 		}
 	}
+}
+
+type genesisStateArgs struct {
+	Validators int
+	Power      int64
+	Params     *types.ConsensusParams
+	Time       time.Time
+}
+
+func makeGenesisState(ctx context.Context, t *testing.T, cfg *cfg.Config, args genesisStateArgs) (sm.State, []types.PrivValidator) {
+	t.Helper()
+	if args.Power == 0 {
+		args.Power = 1
+	}
+	if args.Validators == 0 {
+		args.Power = 4
+	}
+	valSet, privValidators := test.ValidatorSet(ctx, t, args.Validators, args.Power)
+	if args.Params == nil {
+		args.Params = types.DefaultConsensusParams()
+	}
+	if args.Time.IsZero() {
+		args.Time = time.Now()
+	}
+	genDoc := test.GenesisDoc(cfg, args.Time, valSet.Validators, args.Params)
+	s0, err := sm.MakeGenesisState(genDoc)
+	require.NoError(t, err)
+	return s0, privValidators
 }
 
 func getSwitchIndex(switches []*p2p.Switch, peer p2p.Peer) int {
