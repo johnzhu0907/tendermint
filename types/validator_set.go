@@ -683,7 +683,7 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 	talliedVotingPower := int64(0)
 	votingPowerNeeded := vals.TotalVotingPower() * 2 / 3
 	for idx, commitSig := range commit.Signatures {
-		if commitSig.Absent() {
+		if commitSig.BlockIDFlag == BlockIDFlagAbsent {
 			continue // OK, some signatures can be absent.
 		}
 
@@ -697,7 +697,7 @@ func (vals *ValidatorSet) VerifyCommit(chainID string, blockID BlockID,
 			return fmt.Errorf("wrong signature (#%d): %X", idx, commitSig.Signature)
 		}
 		// Good!
-		if commitSig.ForBlock() {
+		if commitSig.BlockIDFlag == BlockIDFlagCommit {
 			talliedVotingPower += val.VotingPower
 		}
 		// else {
@@ -739,7 +739,7 @@ func (vals *ValidatorSet) VerifyCommitLight(chainID string, blockID BlockID,
 	votingPowerNeeded := vals.TotalVotingPower() * 2 / 3
 	for idx, commitSig := range commit.Signatures {
 		// No need to verify absent or nil votes.
-		if !commitSig.ForBlock() {
+		if commitSig.BlockIDFlag != BlockIDFlagCommit {
 			continue
 		}
 
@@ -792,7 +792,7 @@ func (vals *ValidatorSet) VerifyCommitLightTrusting(chainID string, commit *Comm
 
 	for idx, commitSig := range commit.Signatures {
 		// No need to verify absent or nil votes.
-		if !commitSig.ForBlock() {
+		if commitSig.BlockIDFlag != BlockIDFlagCommit {
 			continue
 		}
 
