@@ -121,10 +121,10 @@ func TestBeginBlockValidators(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		lastCommit := types.NewExtendedCommit(1, 0, prevBlockID, tc.lastCommitSigs)
+		lastCommit := &types.Commit{Height: 1, Round: 0, BlockID: prevBlockID, Signatures: tc.lastCommitSigs}
 
 		// block for height 2
-		block := makeBlock(state, 2, lastCommit.ToCommit())
+		block := makeBlock(state, 2, lastCommit)
 
 		_, err = sm.ExecCommitBlock(proxyApp.Consensus(), block, log.TestingLogger(), stateStore, 1)
 		require.Nil(t, err, tc.desc)
@@ -874,7 +874,7 @@ func TestCreateProposalAbsentVoteExtensions(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			app := abcimocks.NewApplication(t)
 			if !testCase.expectPanic {
-				app.On("PrepareProposal", mock.Anything, mock.Anything).Return(&abci.ResponsePrepareProposal{}, nil)
+				app.On("PrepareProposal", mock.Anything).Return(abci.ResponsePrepareProposal{})
 			}
 			cc := proxy.NewLocalClientCreator(app)
 			proxyApp := proxy.NewAppConns(cc, proxy.NopMetrics())
